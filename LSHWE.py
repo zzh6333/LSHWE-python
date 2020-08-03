@@ -9,7 +9,6 @@ import numpy as np
 import tensorflow as tf
 from lshash import LSHash
 
-
 window_size = 2
 learning_rate = 0.01
 training_epoch = 50
@@ -72,7 +71,6 @@ def dict(x):
                 counts.append(1)
     return dic, counts
 
-
 dic, counts = dict(text_x)
 wordcount = len(dic)
 print "total words:",wordcount
@@ -84,7 +82,6 @@ for i in range(wordcount):
 print "rare words:", len(rarewords)
 
 cooc_matr = np.zeros([wordcount, wordcount])
-
 for item in text_x:
     for i in range(len(item)):
         cenword = item[i]
@@ -100,13 +97,11 @@ for i in range(wordcount):
     cooc_matr[i] = cooc_matr[i] / cooc_matr[i][i] * 1.0
 
 lsh = LSHash(hashsize, wordcount)
-
 for i in range(len(cooc_matr)):
     lsh.index(cooc_matr[i])
 
 friendslist = []
 sim_matr = []
-
 for i in range(len(rarewords)):
     result = lsh.query(cooc_matr[rarewords[i]], num_results=friends, distance_func='euclidean')
     length = len(result)
@@ -126,7 +121,6 @@ for i in range(len(rarewords)):
 X = tf.placeholder("float", [wordcount, wordcount])
 sim_true = tf.placeholder("float", [len(rarewords), friends])
 sim_pred = tf.placeholder("float", [len(rarewords), friends])
-
 n_hidden_1 = 256
 n_hidden_2 = dim
 
@@ -143,14 +137,12 @@ biases = {
     'decoder_b2': tf.Variable(tf.random_normal([wordcount])),
 }
 
-
 def encoder(x):
     layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']),
                                    biases['encoder_b1']))
     layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['encoder_h2']),
                                    biases['encoder_b2']))
     return layer_2
-
 
 def decoder(x):
     layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['decoder_h1']),
@@ -162,7 +154,6 @@ def decoder(x):
 cooc_true = X
 encoder_op = encoder(X)
 cooc_pred = decoder(encoder_op)
-
 cost = tf.reduce_mean(tf.pow(cooc_true - cooc_pred, 2))
 cost_min = cost + tf.reduce_mean(tf.pow(sim_true - sim_pred, 2))
 optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost_min)
@@ -175,7 +166,6 @@ else:
 with tf.Session() as sess:
     sess.graph.finalize()
     sess.run(init)
-
     for epoch in range(training_epoch):
         word_list = sess.run(encoder_op, feed_dict={X: cooc_matr})
 
@@ -205,4 +195,3 @@ with open(output_file, "w") as f:
         for item in encoder_result[i]:
             f.write(str(item) + " ")
         f.write("\n")
-
